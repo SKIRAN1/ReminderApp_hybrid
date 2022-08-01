@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
             print("b");
             return const HomeScreen();
           } else {
-            print("entering loginpage");
+            print("entering the loginpage");
             return const LoginScreen();
           }
         },

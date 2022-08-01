@@ -24,10 +24,9 @@ class LoginScreen extends StatelessWidget {
       ),
       nextScreen: const LoginScreenState(),
       splashIconSize: 250,
-      duration: 4000,
+      duration: 3000,
       splashTransition: SplashTransition.fadeTransition,
       backgroundColor: Colors.white,
-      // pageTransitionType: PageTransitionType.bottomToTop,
       animationDuration: const Duration(seconds: 1),
     );
   }
@@ -62,7 +61,7 @@ class _LoginScreenState extends State<LoginScreenState> {
               ),
             ),
             const Text(
-              'remind',
+              'Remind App',
               style: TextStyle(
                 fontSize: 50,
                 fontFamily: fontFamily2,
