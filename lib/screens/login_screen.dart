@@ -1,4 +1,5 @@
 // packages
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
@@ -10,14 +11,35 @@ import 'package:reminder/helpers/constants.dart';
 import '../services/auth_service.dart';
 import '../widgets/login.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  Widget build(BuildContext context) {
+    return AnimatedSplashScreen(
+      splash: Column(
+        children: [
+          Image.asset("assets/images/reminderLogo.jpeg"),
+        ],
+      ),
+      nextScreen: const LoginScreenState(),
+      splashIconSize: 250,
+      duration: 3000,
+      splashTransition: SplashTransition.fadeTransition,
+      backgroundColor: Colors.white,
+      animationDuration: const Duration(seconds: 1),
+    );
+  }
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends StatefulWidget {
+  const LoginScreenState({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreenState> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreenState> {
   bool loading = false;
   @override
   Widget build(BuildContext context) {
@@ -39,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const Text(
-              'remind',
+              'Remind App',
               style: TextStyle(
                 fontSize: 50,
                 fontFamily: fontFamily2,
@@ -105,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
             textStyle: MaterialStateProperty.all(
               const TextStyle(
                 fontSize: 18,
-
               ),
             ),
             backgroundColor: MaterialStateProperty.all(darkColor),
@@ -115,7 +136,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.push(
               context, MaterialPageRoute(builder: (c) => Authpage(islogging)));
         },
-        child: Text(text, ),
+        child: Text(
+          text,
+        ),
       ),
     );
   }
