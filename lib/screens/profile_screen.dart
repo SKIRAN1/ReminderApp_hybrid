@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import "package:flutter/material.dart";
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:reminder/helpers/constants.dart';
+import 'package:reminder/screens/change_password_screen.dart';
+import 'package:reminder/screens/edit_profile_screen.dart';
 import '../services/auth_service.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 
@@ -92,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           // "mon",
-          username ?? userName ?? "",
+          userName ?? "",
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -111,7 +113,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: const TextStyle(color: mainColor),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: () {}, child: const Text('Reset Password')),
+        if (FirebaseAuth.instance.currentUser!.email != 'admin@remind.com') ...[
+          OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                primary: mainColor,
+                onSurface: mainColor,
+                minimumSize: const Size(
+                  100,
+                  40,
+                ),
+              ),
+              onPressed: () async {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (c) => EditProfieScreen(
+                      name: userName ?? '',
+                      phoneNumber: phoneNumber ?? '',
+                      onPop: () => getuserdata(),
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'Edit Profile',
+                style: TextStyle(color: mainColor),
+              )),
+          // const SizedBox(height: 10),
+          if (FirebaseAuth.instance.currentUser!.email != 'admin@remind.com' ||
+              FirebaseAuth.instance.currentUser!.email != null) ...[
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (c) => const ChangePassword()));
+                },
+                child: const Text('Reset Password')),
+          ]
+        ],
         OutlinedButton(
             style: OutlinedButton.styleFrom(
               shape: RoundedRectangleBorder(
