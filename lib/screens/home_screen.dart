@@ -1,12 +1,20 @@
 // packages
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:reminder/screens/users_screen.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 // screens
 import '../screens/profile_screen.dart';
 //helpers
@@ -14,6 +22,60 @@ import '../helpers/constants.dart';
 // Widgets
 import '../widgets/custom_bottom_navigation_bar.dart';
 import '../widgets/reminder_list.dart';
+
+getContinousLocation() async {
+  await Firebase.initializeApp();
+  if (FirebaseAuth.instance.currentUser != null) {
+    // Position position = await Geolocator.getCurrentPosition();
+    // print(position.latitude);
+    // getnearby(position.latitude, position.longitude, 0.5);
+  }
+  // print(position.first.then((value) => value.latitude));
+}
+
+getnearby(lata, lonb, distance) async {
+  if (FirebaseAuth.instance.currentUser != null) {
+  var latt = 0.0144927536231884;
+  var lonn = 0.0181818181818182;
+
+  var lowerLat = lata - (latt * distance);
+  var lowerLon = lonb - (lonn * distance);
+
+  var greaterLat = lata + (latt * distance);
+  var greaterLon = lonb + (lonn * distance);
+
+  var lesserGeopoint = GeoPoint(lowerLat, lowerLon);
+  var greaterGeopoint = GeoPoint(greaterLat, greaterLon);
+  QuerySnapshot<Map<String, dynamic>> query = await FirebaseFirestore.instance
+      .collection("Reminders")
+      .doc(FirebaseAuth.instance.currentUser!.uid)
+      .collection('userReminders')
+      .where('location', isGreaterThan: lesserGeopoint)
+      .where('location', isLessThan: greaterGeopoint)
+      .limit(30)
+      .get();
+  // print(query.docs.length);
+  // ignore: avoid_function_literals_in_foreach_calls
+  query.docs.forEach((element) async {
+    // print(element.data()['notified']);
+    // print(DateFormat('dd-MM-yyyy').format(DateTime.now()));
+    print('/////////////////////////////////////////');
+    if (element.data()['notified'] == null && element.data()['date'] == DateFormat('dd-MM-yyyy').format(DateTime.now())) {
+      print('ggggggggggggggggggggggggggggggggggggggg');
+      FirebaseFirestore.instance
+          .collection("Reminders")
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('userReminders')
+          .doc(element.id)
+          .update({'notified': true});
+      // notify(context);
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(id: 10, channelKey: "key1", title: element.data()['title'], body: element.data()['notes']),
+      );
+    }
+  });
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -35,58 +97,70 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    getUd();
-    getContinousLocation();
+    // setBack();
+    // getUd();
+    // getContinousLocation();
+     FirebaseMessaging.instance.subscribeToTopic('remind');
+    print(FirebaseAuth.instance.currentUser!.email);
   }
 
-  getContinousLocation() async {
-    Stream<Position> position = Geolocator.getPositionStream();
-    position.listen((v) {
-      // print(v.latitude);
-      // getnearby(v.latitude, v.longitude, 0.5);
-    });
-    // print(position.first.then((value) => value.latitude));
-  }
+  // setBack() async {
+  //   await initializeService();
+  // }
 
-  getnearby(lata, lonb, distance) async {
-    var latt = 0.0144927536231884;
-    var lonn = 0.0181818181818182;
+  // Future<void> initializeService() async {
+  //   final service = FlutterBackgroundService();
+  //   await service.configure(
+  //     androidConfiguration: AndroidConfiguration(
+  //       onStart: onStart,
+  //       autoStart: true,
+  //       isForegroundMode: false,
+  //     ),
+  //     iosConfiguration: IosConfiguration(
+  //       autoStart: true,
+  //       onForeground: onStart,
+  //       onBackground: onIosBackground,
+  //     ),
+  //   );
+  //   service.startService();
+  // }
 
-    var lowerLat = lata - (latt * distance);
-    var lowerLon = lonb - (lonn * distance);
+  // bool onIosBackground(ServiceInstance service) {
+  //   WidgetsFlutterBinding.ensureInitialized();
+  //   return true;
+  // }
 
-    var greaterLat = lata + (latt * distance);
-    var greaterLon = lonb + (lonn * distance);
+  // void onStart(ServiceInstance service) async {
+  //   WidgetsFlutterBinding.ensureInitialized();
+  //   DartPluginRegistrant.ensureInitialized();
 
-    var lesserGeopoint = GeoPoint(lowerLat, lowerLon);
-    var greaterGeopoint = GeoPoint(greaterLat, greaterLon);
-    QuerySnapshot<Map<String, dynamic>> query = await FirebaseFirestore.instance
-        .collection("Reminders")
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('userReminders')
-        .where('location', isGreaterThan: lesserGeopoint)
-        .where('location', isLessThan: greaterGeopoint)
-        .get();
-    print(query.docs.length);
-    // ignore: avoid_function_literals_in_foreach_calls
-    query.docs.forEach((element) async {
-      print(element.data()['notified']);
-      print( DateFormat('dd-MM-yyyy').format(DateTime.now()));
-      print('/////////////////////////////////////////');
-      if (element.data()['notified'] == null && element.data()['date'] == DateFormat('dd-MM-yyyy').format(DateTime.now())) {
-        FirebaseFirestore.instance
-            .collection("Reminders")
-            .doc(FirebaseAuth.instance.currentUser!.uid)
-            .collection('userReminders')
-            .doc(element.id)
-            .update({'notified': true});
-        // notify(context);
-        await AwesomeNotifications().createNotification(
-          content: NotificationContent(id: 10, channelKey: "key1", title: element.data()['title'], body: element.data()['notes']),
-        );
-      }
-    });
-  }
+  //   if (service is AndroidServiceInstance) {
+  //     service.on('setAsForeground').listen((event) {
+  //       service.setAsForegroundService();
+  //     });
+
+  //     service.on('setAsBackground').listen((event) {
+  //       service.setAsBackgroundService();
+  //     });
+  //   }
+
+  //   service.on('stopService').listen((event) {
+  //     service.stopSelf();
+  //   });
+  //   Timer.periodic(const Duration(seconds: 1), (timer) async {
+  //     print('hello');
+
+  //     if (service is AndroidServiceInstance) {
+  //       // service.setForegroundNotificationInfo(
+  //       //   title: "My App Service",
+  //       //   content: "Updated at ${DateTime.now()}",
+  //       // );
+  //     }
+
+  //     /// you can see this log in logcat
+  //     print('FLUTTER BACKGROUND SERVICE: ${DateTime.now()}');
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -118,17 +192,31 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIconTheme: const IconThemeData(color: Color(0XFF705DA0)),
         items: [
           //  for reminders icon in nav_bar
-          const BottomNavigationBarItem(
-            activeIcon: Icon(
-              Icons.article_outlined,
-              size: 30,
+          if (FirebaseAuth.instance.currentUser!.email == 'admin@remind.com') ...[
+            const BottomNavigationBarItem(
+              activeIcon: Icon(
+                Icons.group,
+                size: 30,
+              ),
+              icon: Icon(
+                Icons.group,
+                size: 30,
+              ),
+              label: 'Users',
             ),
-            icon: Icon(
-              Icons.article_outlined,
-              size: 30,
+          ] else ...[
+            const BottomNavigationBarItem(
+              activeIcon: Icon(
+                Icons.article_outlined,
+                size: 30,
+              ),
+              icon: Icon(
+                Icons.article_outlined,
+                size: 30,
+              ),
+              label: 'Reminders',
             ),
-            label: 'Reminders',
-          ),
+          ],
           //  for profile icon in nav_bar
           BottomNavigationBarItem(
             activeIcon: _imgUrl != null
@@ -176,8 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Profile',
           ),
         ],
-        screens: const [
-          ReminderList(),
+        screens: [
+          (FirebaseAuth.instance.currentUser!.email == 'admin@remind.com') ? UsersScreen() : ReminderList(),
           SizedBox(),
           ProfileScreen(),
         ],
